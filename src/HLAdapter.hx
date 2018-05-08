@@ -206,7 +206,7 @@ class HLAdapter extends adapter.DebugSession {
 				hlArgs.push(w);
 			}
 		}
-		proc = ChildProcess.spawn("hl", hlArgs, {env: {}, cwd: args.cwd});
+        proc = ChildProcess.spawn("/usr/local/bin/hl", hlArgs, {env: {}, cwd: args.cwd});
 		proc.stdout.setEncoding('utf8');
 		var prev = "";
 		proc.stdout.on('data', function(buf) {
@@ -270,9 +270,13 @@ class HLAdapter extends adapter.DebugSession {
 			Sys.sleep(0.4);
 		}
 
-		if( !dbg.init(new hld.NodeDebugApi(proc.pid, dbg.is64)) ) {
-			throw "Failed to initialize debugger";
-		}
+        try {
+            if( !dbg.init(new hld.NodeDebugApi(proc.pid, dbg.is64)) ) {
+                throw "Failed to initialize debugger";
+            }
+        } catch(e:Dynamic) {
+            trace('EEEEEE', e);
+        }
 
 		debug("connected");
 		return true;
@@ -280,14 +284,22 @@ class HLAdapter extends adapter.DebugSession {
 
 	override function configurationDoneRequest(response:ConfigurationDoneResponse, args:ConfigurationDoneArguments) {
 		if( dbg == null ) return;
-		run();
+		
+        
+        // For some reason this is called on another thread and fuck up Socket in mac
+        debug("init done");
+
+        /*run();
 		debug("init done");
 		timer = new haxe.Timer(16);
 		timer.run = function() {
 			if( dbg.stoppedThread != null )
 				return;
 			run();
-		};
+		};*/
+
+
+
 	}
 
 	function stopDebug() {
